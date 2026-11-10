@@ -30,7 +30,7 @@ jobs:
           cp index.html www/index.html
           cp icon-only.png icon-foreground.png icon-background.png assets/
           npm init -y
-          npm install @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
+          npm install @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7 @capacitor/app@7 @capacitor/haptics@7 @capacitor/share@7
           npx cap init "Caza Patos" com.luis.cazapatos --web-dir www
 
       - name: Crear proyecto Android
