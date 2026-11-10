@@ -1,0 +1,61 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Preparar proyecto
+        run: |
+          mkdir -p www assets
+          cp index.html www/index.html
+          cp icon-only.png icon-foreground.png icon-background.png assets/
+          npm init -y
+          npm install @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
+          npx cap init "Caza Patos" com.luis.cazapatos --web-dir www
+
+      - name: Crear proyecto Android
+        run: |
+          npx cap add android
+          npx @capacitor/assets generate --android
+          npx cap sync android
+          sed -i 's/<activity /<activity android:screenOrientation="portrait" /' android/app/src/main/AndroidManifest.xml
+
+      - name: Compilar APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Renombrar APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk CazaPatos.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CazaPatos-apk
+          path: CazaPatos.apk
+
+      - name: Publicar Release (solo con tag v*)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: CazaPatos.apk
